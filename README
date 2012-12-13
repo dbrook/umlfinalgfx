@@ -1,0 +1,45 @@
+Computer Graphics 1 Final Project (91.427)
+==========================================
+
+Project Group Name: The Red Menace
+
+Members:
+	Austin Veino
+	Dan Scanlan
+	Dan Brook
+
+
+--------------
+ Introduction
+--------------
+After some trying times attempting to merge what we wanted to do with the
+sample Qt code we found it was taking too much time. In fact, so MUCH time
+that pulling an assignment from the past using GLUT, GLEW, and the rest of
+their friends in the GNU/Linux realm was deemed quicker. Live and learn.
+
+--------------------
+ What does this do?
+--------------------
+We don't know yet, either... let us finish coding it first!
+
+-----------------------
+ Compiling and Running
+-----------------------
+This code is heavily based on the work of Dr. Ed Angel, and his provided
+abstractions available at:
+
+   www.cs.unm.edu/~angel/BOOK/INTERACTIVE_COMPUTER_GRAPHICS/SIXTH_EDITION/CODE/
+
+Great care has been taken to allow this to be compiled by itself without too
+much system specific setup and paths. 
+
+The following dependencies exist:
+  - libfreeglut
+  - libglew
+  - libGL
+  - libXmu
+  - libX11
+  - libm
+
+To compile on your system, a simple "make" will produce an executable named
+"final" which you can run with "./final".
