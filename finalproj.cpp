@@ -23,7 +23,7 @@ vec4 colors[NumVertices];
 
 // Division factor
 // (for slowing down how fast something moves when using the keyboard)
-#define DIV_FACT 500.0
+#define DIV_FACT 200.0
 
 // What does this do?
 int  Index = 0;
