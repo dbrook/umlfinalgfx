@@ -6,58 +6,70 @@
  * Description: Final project code. See README for details.
  */
 
-#include "angel/Angel.h"        // Ed Angel's OpenGL Melting-Pot
+#include "angel/Angel.h"        // Ed Angel's OpenGL Helper Extensions
 
 #include <iostream>
 
 typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
 
-// 6 faces/cube * 2 tri/face * 2 vert/tri + 2 triangle for the gnd = 40 vertices/cube
+/*
+ * Initialization of space for the objects in the scene to live
+ */
 const int NumVertices = 100;
-
-// Updated to be vec4s
-// These are the globally-accessible points and colors
-vec4 points[NumVertices];
-vec4 colors[NumVertices];
-
-// Division factor
-// (for slowing down how fast something moves when using the keyboard)
-#define DIV_FACT 200.0
-
-// What does this do?
+vec4 points[NumVertices];         // Each point
+vec4 colors[NumVertices];         // Corresponding colors at points
 int  Index = 0;
 
+/*
+ * Division factor
+ * (for slowing down how fast something moves when using the keyboard)
+ *
+ * Some good values for this:
+ * nVidia fast workstation card             ~ 500.0
+ * run-of-the-mill integrated laptop chip   ~ 200.0
+ */
+#define DIV_FACT 200.0
+
+/*
+ * The model_view matrix will be used by the shader to draw points,
+ * the projection matrix will be used to set which projection the scene has.
+ * (The projection will basically be one of two, depending on user preference
+ * ... orthographic or perspective). There's a global flag that controls this.
+ */
 GLuint model_view;  // model-view matrix uniform shader variable location
 GLuint projection;  // projection matrix uniform shader variable location
-
-// Displacement options
-bool forward = false, backward = false, left = false, right = false;
-
-// Starting cube positions -- DEPRECATED IN FAVOR OF camXYZ
-GLfloat xPos = 0.0, yPos = 0.0, zPos = -4.0;
-
-// Starting cube rotation --  DEPRECATED IN FAVOR OF camRot
-GLfloat thetaX = 0.0, thetaY = 0.0, thetaZ = 0.0;
-
-// Camera position and rotation
-vec4 camXYZ;
-vec3 camRot;
-
-// Current transformation matrix
-mat4 tran;
-
-// Globals that can be modified to change projection matrices
 typedef enum { PERSPECTIVE, ORTHOGRAPHIC } viewerModes;
 viewerModes globalViewMode;
 
-// Declare this globally. Trying to minimize the amount of work redisplay has
+/*
+ * Displacement flags
+ *
+ * These are kept global because their status is needed in several
+ * functions that cannot take arguments. As long as any of them are set
+ * to TRUE, the idle function will "move the camera" in their respective
+ * direction. On a keyUp event, the flag is set FALSE.
+ */
+bool forward = false, backward = false, left = false, right = false;
+
+/*
+ * Current camera position and rotation vectors
+ */
+vec4 camXYZ;
+vec3 camRot;
+
+/*
+ * Current transformation matrix AND the matrix that will be sent to the
+ * shader when an updated projection is requested by the user.
+ * (This was done to try and minimize the amount of work the redisplay
+ * has to do because of flickering. It didn't work, naturally, so I've
+ * just left it here.)
+ */
+mat4 tran;
 mat4 new_projection;
 
-
-//------------------------------------------------------------------------------
 /*
- * Vertices of a unit cube centered at origin, sides aligned with axes
+ * Populate the vertices and colors for the scene
  */
 point4 vertices[14] = {
         point4( -0.5, -0.5,  0.5, 1.0 ),
@@ -94,7 +106,12 @@ color4 vertex_colors[8] = {
         color4( 0.0, 1.0, 1.0, 1.0 )   // cyan
 };
 
-//-----------------------------------------------------------------------------
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//                END OF EVIL GLOBALLY-SCOPED PARAMETERS                     //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
 /*
  * Populate points and colors for one face of the cube
  */
@@ -123,16 +140,16 @@ void colorcube()
 
 //----------------------------------------------------------------------------
 /*
- * Sets up a black ground area.
+ * Sets up the ground area (all green)
  */
 void makeGround()
 {
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[8]; Index++;
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[9]; Index++;
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[10];Index++;
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[11];Index++;
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[12];Index++;
-        colors[Index] = vertex_colors[0]; points[Index] = vertices[13];Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[8]; Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[9]; Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[10];Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[11];Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[12];Index++;
+        colors[Index] = vertex_colors[3]; points[Index] = vertices[13];Index++;
 }
 
 //----------------------------------------------------------------------------
@@ -200,10 +217,9 @@ void init()
         // See if we can use multisampling to smooth things out!
 
         // A grayish background
-        glClearColor( 0.25, 0.25, 0.25, 1.0 ); 
+        glClearColor( 0.15, 0.15, 0.15, 1.0 );
 }
 
-//----------------------------------------------------------------------------
 /*
  * The display function
  */
@@ -224,6 +240,9 @@ void display( void )
         /*
          * Make one big matrix to send to the shader with the current state
          * variable values.
+         *
+         * WARNING: the call to Angel::identity() kept spewing errors so
+         * mat.h has been modified to take this "feature" out.
          */
         tran = Angel::identity();
         tran = tran * RotateY(-camRot.y) * RotateX(-camRot.x);
@@ -243,22 +262,21 @@ void display( void )
         glutSwapBuffers();
 }
 
-//----------------------------------------------------------------------------
-
+/*
+ * Keybindings:
+ *   W - move forward in camera's looking vector
+ *   S - reverse opposite of camera's looking vector
+ *   A - strafe left relative to camera
+ *   D - strafe right relative to camera
+ *
+ *   R - resets the camera positioning and angle at next redraw
+ *   P - perspective view with some "easy to look at" defaults
+ *   O - orthographic view
+ *
+ *   X - Exit (so does ESC and Q)
+ */
 void keyboard( unsigned char key, int x, int y )
 {
-        /*
-         * Keybindings:
-         *   W - move forward in camera's looking vector
-         *   S - reverse opposite of camera's looking vector
-         *   A - strafe left relative to camera
-         *   D - strafe right relative to camera
-         *
-         *   P - perspective view with some "easy to look at" defaults
-         *   O - orthographic view
-         *
-         *   X - Exit (so does ESC and Q)
-         */
         switch (key) {
         case 'p':
                 globalViewMode = PERSPECTIVE;
@@ -331,7 +349,7 @@ void keyUp( unsigned char key, int x, int y )
         glutPostRedisplay();
 }
 
-//----------------------------------------------------------------------------
+
 
 void mouse(int button, int state, int x, int y)
 {
@@ -346,16 +364,18 @@ void mouse(int button, int state, int x, int y)
         y -= hmiddle;
 
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-                thetaY = -x;
-                thetaX = y;
+
         }
 
         glutPostRedisplay();
 }
 
 
-// Helper function to compute radians from degrees
-GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
+/*
+ * Helper function to compute radians from degrees
+ * I forced-inlined it for efficiency purposes.
+ */
+inline GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
 
 /*
  * Idle callback
@@ -389,28 +409,31 @@ void idle(void)
 
 }
 
-//----------------------------------------------------------------------------
 
 int main( int argc, char **argv )
 {
+        /*
+         * Bunch of init code... it's all from Angel's examples.
+         */
         glutInit( &argc, argv );
         glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH );
         glutInitWindowSize( 512, 512 );
-        glutCreateWindow( "Color Cube Projections" );
-
+        glutCreateWindow( "final" );
         glewInit();
-	
         init();
 
+        /*
+         * Initialize the GLUT callbacks
+         */
         glutDisplayFunc( display );
-	glutMouseFunc( mouse );
-        
+        glutMouseFunc( mouse );
         glutKeyboardUpFunc( keyUp );
         glutKeyboardFunc( keyboard );
-
         glutIdleFunc( idle );
 
+        /*
+         * Enter the GLUT event loop for input processing
+         */
         glutMainLoop();
-
         return 0;
 }
