@@ -33,6 +33,8 @@ int  Index = 0;
 
 #define SPD_FACT 0.03
 
+#define MOUSE_SENSITIVITY 0.1
+
 /*
  * The model_view matrix will be used by the shader to draw points,
  * the projection matrix will be used to set which projection the scene has.
@@ -53,6 +55,7 @@ viewerModes globalViewMode;
  * direction. On a keyUp event, the flag is set FALSE.
  */
 bool forward = false, backward = false, left = false, right = false;
+bool lookLeft = false, lookRight = false, lookUp = false, lookDown = false;
 
 /*
  * Current camera position and rotation vectors
@@ -306,6 +309,18 @@ void keyboard( unsigned char key, int x, int y )
                 right = true;
                 break;
 
+        case 'i':
+                lookUp = true;
+                break;
+        case 'k':
+                lookDown = true;
+                break;
+        case 'j':
+                lookLeft = true;
+                break;
+        case 'l':
+                lookRight = true;
+                break;
 
         case 'r':
                 // Reset field of view!
@@ -354,6 +369,18 @@ void keyUp( unsigned char key, int x, int y )
         case 'd':
                 right = false;
                 break;
+        case 'i':
+                lookUp = false;
+                break;
+        case 'k':
+                lookDown = false;
+                break;
+        case 'j':
+                lookLeft = false;
+                break;
+        case 'l':
+                lookRight = false;
+                break;
         }
         glutPostRedisplay();
 }
@@ -379,6 +406,23 @@ void mouse(int button, int state, int x, int y)
         glutPostRedisplay();
 }
 
+void lookAt( int x, int y )
+{
+        // make sure we're not in the center
+        if (x != 255 || y != 255)
+        {
+            camRot.y -= (255 - x) * MOUSE_SENSITIVITY;
+
+            // lock the up and down look to no more than 90 degrees
+            if (camRot.x - (255 - y) * MOUSE_SENSITIVITY <= 90 &&
+                    camRot.x - (255 - y) * MOUSE_SENSITIVITY >= -90)
+            {
+                camRot.x -= (255 - y) * MOUSE_SENSITIVITY;
+            }
+
+            glutWarpPointer(255, 255);
+        }
+}
 
 /*
  * Helper function to compute radians from degrees
@@ -404,6 +448,15 @@ void idle(void)
                 camVel.x = -SPD_FACT;
         else
                 camVel.x = 0.0;
+
+        if (lookUp)
+                camRot.x += 0.1;
+        if (lookDown)
+                camRot.x -= 0.1;
+        if (lookLeft)
+                camRot.y += 0.1;
+        if (lookRight)
+                camRot.y -= 0.1;
 
         // Need to update the frame buffer
         glutPostRedisplay();
@@ -436,6 +489,10 @@ int main( int argc, char **argv )
         glutKeyboardUpFunc( keyUp );
         glutKeyboardFunc( keyboard );
         glutIdleFunc( idle );
+        glutPassiveMotionFunc(lookAt);
+
+        // Make the cursor disappear
+        glutSetCursor(GLUT_CURSOR_NONE);
 
         /*
          * Enter the GLUT event loop for input processing

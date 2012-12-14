@@ -43,3 +43,5 @@ The following dependencies exist:
 
 To compile on your system, a simple "make" will produce an executable named
 "final" which you can run with "./final".
+
+If you are compiling on the Mac, you need to issue a "make -f Makefile_MAC"
