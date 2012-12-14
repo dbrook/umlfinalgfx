@@ -4,8 +4,10 @@
 ## Author: Dan Brook
 ##
 
-GCC=-pedantic -I angel
+GCC=-pedantic
 LINKS=-lGLEW -lglut -lGL -lXmu -lX11 -lm
+
+all: finalproj
 
 finalproj: angel/InitShader.o finalproj.o
 	g++ $(GCC) $(LINKS) $^ -o final

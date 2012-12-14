@@ -1,12 +1,12 @@
 /*
  * Filename: finalproj.cpp
  * 
- * 2-Dec-2012
+ * 12-Dec-2012
  * 
  * Description: Final project code. See README for details.
  */
 
-#include "Angel.h"        // Ed Angel's OpenGL Melting-Pot
+#include "angel/Angel.h"        // Ed Angel's OpenGL Melting-Pot
 
 #include <iostream>
 
@@ -21,6 +21,10 @@ const int NumVertices = 100;
 vec4 points[NumVertices];
 vec4 colors[NumVertices];
 
+// Division factor
+// (for slowing down how fast something moves when using the keyboard)
+#define DIV_FACT 500.0
+
 // What does this do?
 int  Index = 0;
 
@@ -31,7 +35,7 @@ GLuint projection;  // projection matrix uniform shader variable location
 bool forward = false, backward = false, left = false, right = false;
 
 // Starting cube positions (modified so projection differences can be seen)
-GLfloat xPos = 0.0, yPos = 0.0, zPos = -10.0;
+GLfloat xPos = 0.0, yPos = 0.0, zPos = -5.0;
 
 // Starting cube rotation (modified so projection differences can be seen easily)
 GLfloat thetaX = 0.0, thetaY = 0.0, thetaZ = 0.0;
@@ -57,9 +61,9 @@ point4 vertices[14] = {
         point4(  0.5,  0.5, -0.5, 1.0 ),
         point4(  0.5, -0.5, -0.5, 1.0 ),
 
-		/*
-		 * Ground coordinates
-		 */
+        /*
+         * Ground coordinates
+         */
         point4( -1, -1, -1, 1.0 ),
         point4( -1, -1,  1, 1.0 ),
         point4(  1, -1,  1, 1.0 ),
@@ -82,7 +86,7 @@ color4 vertex_colors[8] = {
         color4( 0.0, 1.0, 1.0, 1.0 )   // cyan
 };
 
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 /*
  * Populate points and colors for one face of the cube
  */
@@ -96,7 +100,6 @@ void quad( int a, int b, int c, int d )
         colors[Index] = vertex_colors[d]; points[Index] = vertices[d]; Index++;
 }
 
-//----------------------------------------------------------------------------
 /* 
  * Sets up each face of the color cube w/ the quad() helper function
  */
@@ -116,12 +119,12 @@ void colorcube()
  */
 void makeGround()
 {
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[8]; Index++;
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[9]; Index++;
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[10]; Index++;
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[11]; Index++;
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[12]; Index++;
-		colors[Index] = vertex_colors[0]; points[Index] = vertices[13]; Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[8]; Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[9]; Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[10];Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[11];Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[12];Index++;
+        colors[Index] = vertex_colors[0]; points[Index] = vertices[13];Index++;
 }
 
 //----------------------------------------------------------------------------
@@ -130,9 +133,8 @@ void makeGround()
  */
 void init()
 {
-        // Fill up the unit color cube
-        colorcube();
-        makeGround();
+        colorcube();        // Fill up the unit color cube
+        makeGround();       // Show the ground somewhere
         
         // Create a vertex array object
         GLuint vao;
@@ -165,6 +167,10 @@ void init()
         projection = glGetUniformLocation( program, "projection" );
         
         glEnable( GL_DEPTH_TEST );
+
+        // See if we can use multisampling to smooth things out!
+
+
         glClearColor( 0.25, 0.25, 0.25, 1.0 ); 
 }
 
@@ -186,12 +192,17 @@ void display( void )
          * Make one big matrix to send to the shader with the current state
          * variable values.
          */
-        tran = Angel::identity();
-        tran = tran * Perspective( 45.0, aspect, 0.5, 9.0 );
-        tran = tran * RotateX( thetaX ) * RotateY( thetaY );
-        tran = tran * Translate( xPos, yPos, zPos );
+//        tran = Angel::identity();
+//        tran = tran * Perspective( 45.0, aspect, 0.5, 9.0 );
+//        tran = tran * RotateX( thetaX ) * RotateY( thetaY );
+//        tran = tran * Translate( xPos, yPos, zPos );
         
-
+        const vec3 viewer_pos( xPos, yPos, zPos );
+        tran = (Translate( viewer_pos ) *
+                        RotateX( thetaX ) *
+                        RotateY( thetaY ) *
+                        RotateZ( thetaZ ) *
+                        Translate( viewer_pos ));
 	
         if (globalViewMode == PERSPECTIVE)
                 new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
@@ -213,38 +224,43 @@ void display( void )
 
 void keyboard( unsigned char key, int x, int y )
 {
-	/* 
-	 * Keybindings:
-	 *   P - perspective view with some "easy to look at" defaults
-	 *   O - orthographic view
-	 *   
+        /*
+         * Keybindings:
+         *   P - perspective view with some "easy to look at" defaults
+         *   O - orthographic view
+         *
          *   X - Exit (so does ESC and Q)
-	 */	
-        switch ( key ) {
+         */
+        switch (key) {
         case 'p':
-                globalViewMode = PERSPECTIVE; break;
+                globalViewMode = PERSPECTIVE;
+                break;
         case 'o':
-                globalViewMode = ORTHOGRAPHIC; break;
+                globalViewMode = ORTHOGRAPHIC;
+                break;
         case 'w':
-                forward = true; break;
+                forward = true;
+                break;
         case 's':
-                backward = true; break;
+                backward = true;
+                break;
         case 'a':
-                left = true; break;
+                left = true;
+                break;
         case 'd':
-                right = true; break;
+                right = true;
+                break;
 
-                
-        /* EXIT BLOCK */
+                /* EXIT BLOCK */
         case 033:
-		case 'q':
-		case 'x':
-            exit( EXIT_SUCCESS );
-            break;
+        case 'q':
+        case 'x':
+                exit( EXIT_SUCCESS );
+                break;
         }
-	
-	// Update drawing
-	glutPostRedisplay();
+
+        // Update drawing
+        glutPostRedisplay();
 }
 
 /* 
@@ -254,14 +270,19 @@ void keyUp( unsigned char key, int x, int y )
 {
         switch (key) {
         case 'w':
-                forward = false; break;
+                forward = false;
+                break;
         case 's':
-                backward = false; break;
+                backward = false;
+                break;
         case 'a':
-                left = false; break;
+                left = false;
+                break;
         case 'd':
-                right = false; break;
+                right = false;
+                break;
         }
+        glutPostRedisplay();
 }
 
 //----------------------------------------------------------------------------
@@ -316,29 +337,30 @@ GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
 void idle( void )
 {
         if (forward) {
-                xPos -= sin(thetaY) / 200.0;
-		zPos += cos(thetaY) / 200.0;
-		yPos += sin(thetaX) / 200.0;
+                xPos -= sin(thetaY) / DIV_FACT;
+		zPos += cos(thetaY) / DIV_FACT;
+		yPos += sin(thetaX) / DIV_FACT;
         }
         
         if (backward) {
-		xPos += sin(thetaY) / 200.0;
-		zPos -= cos(thetaY) / 200.0;
-		yPos -= sin(thetaX) / 200.0;
+		xPos += sin(thetaY) / DIV_FACT;
+		zPos -= cos(thetaY) / DIV_FACT;
+		yPos -= sin(thetaX) / DIV_FACT;
         }
         
         if (left) {
-		xPos -= cos(thetaY) / 200.0;
-		zPos -= sin(thetaY) / 200.0;
+		xPos += cos(thetaY) / DIV_FACT;
+		zPos += sin(thetaY) / DIV_FACT;
         }
         
         if (right) {
-		xPos += cos(thetaY) / 200.0;
-		zPos += sin(thetaY) / 200.0;
+		xPos -= cos(thetaY) / DIV_FACT;
+		zPos -= sin(thetaY) / DIV_FACT;
         }
         
         // Need to update the frame buffer
         glutPostRedisplay();
+
 }
 
 //----------------------------------------------------------------------------
@@ -356,11 +378,6 @@ int main( int argc, char **argv )
 
         glutDisplayFunc( display );
 	glutMouseFunc( mouse );
-        
-        // Special thanks to:
-        //
-        // This will make the key repeat problems go away
-//        glutSetIgnoreKeyRepeat( true );
         
         glutKeyboardUpFunc( keyUp );
         glutKeyboardFunc( keyboard );

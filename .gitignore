@@ -14,3 +14,6 @@
 
 # Horrible Emacs temporary files
 *~
+
+# The binary's name just in case
+final
