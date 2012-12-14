@@ -1,0 +1,21 @@
+GCC_OPTIONS=-Wall -pedantic
+GL_OPTIONS=-framework OpenGL -framework GLUT
+OPTIONS=$(GCC_OPTIONS) $(GL_OPTIONS)
+
+
+
+all: finalproj
+
+finalproj: angel/InitShader.o finalproj.o
+	g++ $(GCC_OPTIONS) $(GL_OPTIONS) $^ -o final
+
+finalproj.o: finalproj.cpp
+	g++ $(GCC_OPTIONS) -c $^ -o fianlproj.o
+
+angel/InitShader.o:
+	g++ $(GCC_OPTIONS) -c angel/InitShader.cpp -o angel/InitShader.o
+
+clean:
+	rm -rf *~ *.o angel/InitShader.o final
+
+
