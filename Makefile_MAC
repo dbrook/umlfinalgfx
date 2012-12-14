@@ -1,5 +1,5 @@
-GCC_OPTIONS=-pedantic
-GL_OPTIONS=-framework OpenGL -framework GLUT
+GCC_OPTIONS=-pedantic  
+GL_OPTIONS=-framework OpenGL -framework GLUT -framework ApplicationServices
 OPTIONS=$(GCC_OPTIONS) $(GL_OPTIONS)
 
 
