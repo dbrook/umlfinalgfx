@@ -47,6 +47,10 @@ mat4 tran;
 typedef enum { PERSPECTIVE, ORTHOGRAPHIC } viewerModes;
 viewerModes globalViewMode;
 
+// Declare this globally. Trying to minimize the amount of work redisplay has
+mat4 new_projection;
+
+
 //------------------------------------------------------------------------------
 /*
  * Vertices of a unit cube centered at origin, sides aligned with axes
@@ -168,9 +172,20 @@ void init()
         
         glEnable( GL_DEPTH_TEST );
 
+        // Get a new projection
+        // Projection for Homework 2 uses some handy globals so the controlling keys
+        // can change matrices.
+        GLfloat aspect = GLfloat( glutGet(GLUT_WINDOW_WIDTH) / glutGet(GLUT_WINDOW_HEIGHT) );
+
+        if (globalViewMode == PERSPECTIVE)
+                new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
+        else if (globalViewMode == ORTHOGRAPHIC)
+                new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
+
+
         // See if we can use multisampling to smooth things out!
 
-
+        // A grayish background
         glClearColor( 0.25, 0.25, 0.25, 1.0 ); 
 }
 
@@ -182,12 +197,6 @@ void display( void )
 {
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         
-        // Get a new projection
-        // Projection for Homework 2 uses some handy globals so the controlling keys
-        // can change matrices.
-        GLfloat aspect = GLfloat( glutGet(GLUT_WINDOW_WIDTH) / glutGet(GLUT_WINDOW_HEIGHT) );
-        mat4 new_projection;
-
         /*
          * Make one big matrix to send to the shader with the current state
          * variable values.
@@ -203,13 +212,7 @@ void display( void )
                         RotateY( thetaY ) *
                         RotateZ( thetaZ ) *
                         Translate( viewer_pos ));
-	
-        if (globalViewMode == PERSPECTIVE)
-                new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
-        else if (globalViewMode == ORTHOGRAPHIC)
-                new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
-        
-        
+
         /* 
          * Update the model view matrix with the translation.
          * Then update the projection matrix.
@@ -258,6 +261,16 @@ void keyboard( unsigned char key, int x, int y )
                 exit( EXIT_SUCCESS );
                 break;
         }
+
+        // Get a new projection
+        // Projection for Homework 2 uses some handy globals so the controlling keys
+        // can change matrices.
+        GLfloat aspect = GLfloat( glutGet(GLUT_WINDOW_WIDTH) / glutGet(GLUT_WINDOW_HEIGHT) );
+
+        if (globalViewMode == PERSPECTIVE)
+                new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
+        else if (globalViewMode == ORTHOGRAPHIC)
+                new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
 
         // Update drawing
         glutPostRedisplay();
@@ -357,7 +370,7 @@ void idle( void )
 		xPos -= cos(thetaY) / DIV_FACT;
 		zPos -= sin(thetaY) / DIV_FACT;
         }
-        
+
         // Need to update the frame buffer
         glutPostRedisplay();
 
