@@ -22,7 +22,7 @@ vec4 colors[NumVertices];         // Corresponding colors at points
 int  Index = 0;
 
 /*
- * Division factor
+ * Division factor and Speed factor
  * (for slowing down how fast something moves when using the keyboard)
  *
  * Some good values for this:
@@ -30,6 +30,8 @@ int  Index = 0;
  * run-of-the-mill integrated laptop chip   ~ 200.0
  */
 #define DIV_FACT 200.0
+
+#define SPD_FACT 0.03
 
 /*
  * The model_view matrix will be used by the shader to draw points,
@@ -57,6 +59,7 @@ bool forward = false, backward = false, left = false, right = false;
  */
 vec4 camXYZ;
 vec3 camRot;
+vec4 camVel;
 
 /*
  * Current transformation matrix AND the matrix that will be sent to the
@@ -208,7 +211,7 @@ void init()
                 new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
 
         // Make the transformation matrix
-        //tran = *(new mat4());
+        tran = *(new mat4());
 
         // Initialize the position and rotation of the camera
         camXYZ.x =  0.0;
@@ -250,7 +253,9 @@ void display( void )
          */
         tran = Angel::identity();
         tran = tran * RotateY(-camRot.y) * RotateX(-camRot.x);
-        //camXYZ = camXYZ + tran;
+
+        // Multiplied by the camVel vec4 just to make the syntax error go away.
+        camXYZ = camXYZ + tran * camVel;
 
         tran = Angel::identity();
         tran = tran * RotateX(camRot.x) * RotateY(camRot.y);
@@ -386,34 +391,27 @@ inline GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
  */
 void idle(void)
 {
-        if (forward) {
-                camXYZ.x -= sin(camRot.y) / DIV_FACT;
-                camXYZ.z += cos(camRot.y) / DIV_FACT;
-                camXYZ.y += sin(camRot.x) / DIV_FACT;
-        }
+        if (forward)
+                camVel.z = SPD_FACT;
+        else if (backward)
+                camVel.z = -SPD_FACT;
+        else
+                camVel.z = 0.0;
 
-        if (backward) {
-                camXYZ.x += sin(camRot.y) / DIV_FACT;
-                camXYZ.z -= cos(camRot.y) / DIV_FACT;
-                camXYZ.y -= sin(camRot.x) / DIV_FACT;
-        }
-
-        if (left) {
-                camXYZ.x += cos(camRot.y) / DIV_FACT;
-                camXYZ.z += sin(camRot.y) / DIV_FACT;
-        }
-
-        if (right) {
-                camXYZ.x -= cos(camRot.y) / DIV_FACT;
-                camXYZ.z -= sin(camRot.y) / DIV_FACT;
-        }
+        if (left)
+                camVel.x = SPD_FACT;
+        else if (right)
+                camVel.x = -SPD_FACT;
+        else
+                camVel.x = 0.0;
 
         // Need to update the frame buffer
         glutPostRedisplay();
-
 }
 
-
+/*****************************************************************************
+ * Main
+ *****************************************************************************/
 int main( int argc, char **argv )
 {
         /*
@@ -423,7 +421,11 @@ int main( int argc, char **argv )
         glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH );
         glutInitWindowSize( 512, 512 );
         glutCreateWindow( "final" );
+
+#ifdef __APPLE__
+#else
         glewInit();
+#endif
         init();
 
         /*
