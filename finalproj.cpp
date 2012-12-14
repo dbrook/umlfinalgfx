@@ -8,6 +8,10 @@
 
 #include "angel/Angel.h"        // Ed Angel's OpenGL Helper Extensions
 
+#ifdef __APPLE__
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 #include <iostream>
 
 typedef Angel::vec4  color4;
@@ -400,8 +404,9 @@ void lookAt( int x, int y )
             {
                 camRot.x -= (255 - y) * MOUSE_SENSITIVITY;
             }
-
+            
             glutWarpPointer(255, 255);
+
         }
 }
 
@@ -457,6 +462,8 @@ int main( int argc, char **argv )
         glutCreateWindow( "final" );
 
 #ifdef __APPLE__
+        CGSetLocalEventsSuppressionInterval(0.0);
+        //CGAssociateMouseAndMouseCursorPosition(false);
 #else
         glewInit();
 #endif
@@ -473,6 +480,7 @@ int main( int argc, char **argv )
 
         // Make the cursor disappear
         glutSetCursor(GLUT_CURSOR_NONE);
+        glutWarpPointer(255, 255);
 
         /*
          * Enter the GLUT event loop for input processing
