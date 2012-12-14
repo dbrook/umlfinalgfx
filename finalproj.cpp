@@ -488,9 +488,9 @@ void idle(void)
                 camVel.x = 0.0;
 
         if (lookUp)
-                camRot.x += 0.2;
-        if (lookDown)
                 camRot.x -= 0.2;
+        if (lookDown)
+                camRot.x += 0.2;
         if (lookLeft)
                 camRot.y -= 0.2;
         if (lookRight)
