@@ -386,9 +386,10 @@ void keyUp( unsigned char key, int x, int y )
 }
 
 
-
 void lookAt( int x, int y )
 {
+        // Thanks to the Simeandroids group for this. Solid mouse
+        // handling work there, folks!
         // make sure we're not in the center
         if (x != 255 || y != 255)
         {
@@ -471,8 +472,9 @@ int main( int argc, char **argv )
         glutIdleFunc( idle );
         glutPassiveMotionFunc(lookAt);
 
-        // Make the cursor disappear
+        // Make the cursor disappear and then center it to capture motion.
         glutSetCursor(GLUT_CURSOR_NONE);
+        glutWarpPointer(255, 255);
 
         /*
          * Enter the GLUT event loop for input processing
