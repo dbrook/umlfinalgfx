@@ -387,25 +387,6 @@ void keyUp( unsigned char key, int x, int y )
 
 
 
-void mouse(int button, int state, int x, int y)
-{
-        int hmiddle, wmiddle;
-
-        // Figure out where the center of the frame buffer is
-        wmiddle = glutGet(GLUT_WINDOW_WIDTH) / 2;
-        hmiddle = glutGet(GLUT_WINDOW_HEIGHT) / 2;
-
-        // Make the center look straight onto the cube
-        x -= wmiddle;
-        y -= hmiddle;
-
-        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-
-        }
-
-        glutPostRedisplay();
-}
-
 void lookAt( int x, int y )
 {
         // make sure we're not in the center
@@ -450,13 +431,13 @@ void idle(void)
                 camVel.x = 0.0;
 
         if (lookUp)
-                camRot.x += 0.1;
+                camRot.x += 0.2;
         if (lookDown)
-                camRot.x -= 0.1;
+                camRot.x -= 0.2;
         if (lookLeft)
-                camRot.y += 0.1;
+                camRot.y -= 0.2;
         if (lookRight)
-                camRot.y -= 0.1;
+                camRot.y += 0.2;
 
         // Need to update the frame buffer
         glutPostRedisplay();
@@ -485,7 +466,6 @@ int main( int argc, char **argv )
          * Initialize the GLUT callbacks
          */
         glutDisplayFunc( display );
-        glutMouseFunc( mouse );
         glutKeyboardUpFunc( keyUp );
         glutKeyboardFunc( keyboard );
         glutIdleFunc( idle );
