@@ -34,11 +34,15 @@ GLuint projection;  // projection matrix uniform shader variable location
 // Displacement options
 bool forward = false, backward = false, left = false, right = false;
 
-// Starting cube positions (modified so projection differences can be seen)
-GLfloat xPos = 0.0, yPos = 0.0, zPos = -5.0;
+// Starting cube positions -- DEPRECATED IN FAVOR OF camXYZ
+GLfloat xPos = 0.0, yPos = 0.0, zPos = -4.0;
 
-// Starting cube rotation (modified so projection differences can be seen easily)
+// Starting cube rotation --  DEPRECATED IN FAVOR OF camRot
 GLfloat thetaX = 0.0, thetaY = 0.0, thetaZ = 0.0;
+
+// Camera position and rotation
+vec4 camXYZ;
+vec3 camRot;
 
 // Current transformation matrix
 mat4 tran;
@@ -68,12 +72,12 @@ point4 vertices[14] = {
         /*
          * Ground coordinates
          */
-        point4( -1, -1, -1, 1.0 ),
-        point4( -1, -1,  1, 1.0 ),
-        point4(  1, -1,  1, 1.0 ),
-        point4( -1, -1, -1, 1.0 ),
-        point4(  1, -1,  1, 1.0 ),
-        point4(  1, -1, -1, 1.0 )
+        point4( -2, -2, -2, 1.0 ),
+        point4( -2, -2,  2, 1.0 ),
+        point4(  2, -2,  2, 1.0 ),
+        point4( -2, -2, -2, 1.0 ),
+        point4(  2, -2,  2, 1.0 ),
+        point4(  2, -2, -2, 1.0 )
 };
 
 /*
@@ -178,10 +182,20 @@ void init()
         GLfloat aspect = GLfloat( glutGet(GLUT_WINDOW_WIDTH) / glutGet(GLUT_WINDOW_HEIGHT) );
 
         if (globalViewMode == PERSPECTIVE)
-                new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
+                new_projection = Perspective( 45.0, aspect, 0.5, 15.0 );
         else if (globalViewMode == ORTHOGRAPHIC)
                 new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
 
+        // Make the transformation matrix
+        //tran = *(new mat4());
+
+        // Initialize the position and rotation of the camera
+        camXYZ.x =  0.0;
+        camXYZ.y =  0.0;
+        camXYZ.z = -5.0;
+        camRot.x =  0.0;
+        camRot.y =  0.0;
+        camRot.z =  0.0;
 
         // See if we can use multisampling to smooth things out!
 
@@ -197,21 +211,27 @@ void display( void )
 {
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
         
+        // Get a new projection
+        // Projection for Homework 2 uses some handy globals so the controlling keys
+        // can change matrices.
+        GLfloat aspect = GLfloat( glutGet(GLUT_WINDOW_WIDTH) / glutGet(GLUT_WINDOW_HEIGHT) );
+
+        if (globalViewMode == PERSPECTIVE)
+                new_projection = Perspective( 45.0, aspect, 0.5, 15.0 );
+        else if (globalViewMode == ORTHOGRAPHIC)
+                new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
+
         /*
          * Make one big matrix to send to the shader with the current state
          * variable values.
          */
-//        tran = Angel::identity();
-//        tran = tran * Perspective( 45.0, aspect, 0.5, 9.0 );
-//        tran = tran * RotateX( thetaX ) * RotateY( thetaY );
-//        tran = tran * Translate( xPos, yPos, zPos );
-        
-        const vec3 viewer_pos( xPos, yPos, zPos );
-        tran = (Translate( viewer_pos ) *
-                        RotateX( thetaX ) *
-                        RotateY( thetaY ) *
-                        RotateZ( thetaZ ) *
-                        Translate( viewer_pos ));
+        tran = Angel::identity();
+        tran = tran * RotateY(-camRot.y) * RotateX(-camRot.x);
+        //camXYZ = camXYZ + tran;
+
+        tran = Angel::identity();
+        tran = tran * RotateX(camRot.x) * RotateY(camRot.y);
+        tran = tran * Translate(camXYZ.x, camXYZ.y, camXYZ.z);
 
         /* 
          * Update the model view matrix with the translation.
@@ -229,6 +249,11 @@ void keyboard( unsigned char key, int x, int y )
 {
         /*
          * Keybindings:
+         *   W - move forward in camera's looking vector
+         *   S - reverse opposite of camera's looking vector
+         *   A - strafe left relative to camera
+         *   D - strafe right relative to camera
+         *
          *   P - perspective view with some "easy to look at" defaults
          *   O - orthographic view
          *
@@ -252,6 +277,14 @@ void keyboard( unsigned char key, int x, int y )
                 break;
         case 'd':
                 right = true;
+                break;
+
+
+        case 'r':
+                // Reset field of view!
+                camXYZ.y = camXYZ.x = 0.0;
+                camXYZ.z = -5.0;
+                camRot.x = camRot.y = camRot.z = 0.0;
                 break;
 
                 /* EXIT BLOCK */
@@ -300,44 +333,24 @@ void keyUp( unsigned char key, int x, int y )
 
 //----------------------------------------------------------------------------
 
-void mouse( int button, int state, int x, int y )
+void mouse(int button, int state, int x, int y)
 {
-	int hmiddle, wmiddle;
+        int hmiddle, wmiddle;
 
         // Figure out where the center of the frame buffer is
-        wmiddle = glutGet( GLUT_WINDOW_WIDTH ) / 2;
-        hmiddle = glutGet( GLUT_WINDOW_HEIGHT ) / 2;
-/*
-	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		
-		std::cout << "Clicked: (" << x << ", " << y
-                          << ").\tMiddle of screen is "
-                          << wmiddle << ", " << hmiddle << "." << std::endl;
-		if (y <= hmiddle) {
-			if (x >= wmiddle) {
-				std::cout << "Turn up-right" << std::endl;
-			} else {
-				std::cout << "Turn up-left" << std::endl;			
-			}
-		} else {
-			if (x >= wmiddle) {
-				std::cout << "Turn down-right" << std::endl;
-			} else {
-				std::cout << "Turn down-left" << std::endl;
-			}
-		}
-	}
-*/
+        wmiddle = glutGet(GLUT_WINDOW_WIDTH) / 2;
+        hmiddle = glutGet(GLUT_WINDOW_HEIGHT) / 2;
+
         // Make the center look straight onto the cube
         x -= wmiddle;
         y -= hmiddle;
-        
+
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
                 thetaY = -x;
                 thetaX = y;
         }
-	
-	glutPostRedisplay();
+
+        glutPostRedisplay();
 }
 
 
@@ -347,28 +360,28 @@ GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
 /*
  * Idle callback
  */
-void idle( void )
+void idle(void)
 {
         if (forward) {
-                xPos -= sin(thetaY) / DIV_FACT;
-		zPos += cos(thetaY) / DIV_FACT;
-		yPos += sin(thetaX) / DIV_FACT;
+                camXYZ.x -= sin(camRot.y) / DIV_FACT;
+                camXYZ.z += cos(camRot.y) / DIV_FACT;
+                camXYZ.y += sin(camRot.x) / DIV_FACT;
         }
-        
+
         if (backward) {
-		xPos += sin(thetaY) / DIV_FACT;
-		zPos -= cos(thetaY) / DIV_FACT;
-		yPos -= sin(thetaX) / DIV_FACT;
+                camXYZ.x += sin(camRot.y) / DIV_FACT;
+                camXYZ.z -= cos(camRot.y) / DIV_FACT;
+                camXYZ.y -= sin(camRot.x) / DIV_FACT;
         }
-        
+
         if (left) {
-		xPos += cos(thetaY) / DIV_FACT;
-		zPos += sin(thetaY) / DIV_FACT;
+                camXYZ.x += cos(camRot.y) / DIV_FACT;
+                camXYZ.z += sin(camRot.y) / DIV_FACT;
         }
-        
+
         if (right) {
-		xPos -= cos(thetaY) / DIV_FACT;
-		zPos -= sin(thetaY) / DIV_FACT;
+                camXYZ.x -= cos(camRot.y) / DIV_FACT;
+                camXYZ.z -= sin(camRot.y) / DIV_FACT;
         }
 
         // Need to update the frame buffer

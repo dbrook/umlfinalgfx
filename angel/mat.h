@@ -10,7 +10,7 @@
 #include "vec.h"
 
 /*
- * Added by Dan Brook ... the printf() calls crash this
+ * Added by Dan Brook ... the printf() calls crash this otherwise
  */
 #include <cstdio>
 
@@ -789,14 +789,18 @@ void printm(const mat4 a)
     printf("\n");
 }
 
-inline
-mat4 identity()
+inline mat4 identity()
 {
-    Error( "replace with either a matrix constructor or identity method" );
-    mat4 c;
-    for(int i=0; i<4; i++) for(int j=0; j<4; j++) c[i][j]=0.0;
-    for(int i=0; i<4; i++) c[i][i] = 1.0;
-    return c;
+        // Modified by Dan Brook.
+        // This Error() call seems to send the program into a frenzy so I killed it.
+//        Error( "replace with either a matrix constructor or identity method");
+        mat4 c;
+        for (int i = 0; i < 4; i++)
+                for (int j = 0; j < 4; j++)
+                        c[i][j] = 0.0;
+        for (int i = 0; i < 4; i++)
+                c[i][i] = 1.0;
+        return c;
 }
 
 
