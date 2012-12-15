@@ -6,3 +6,7 @@
 
 #include "asset.hpp"
 
+Asset::Asset()
+{
+        5;
+}

@@ -23,7 +23,7 @@
 #endif
 
 class Asset {
-
+        Asset();
 };
 
 #endif
