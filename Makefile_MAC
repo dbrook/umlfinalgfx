@@ -7,14 +7,13 @@ OPTIONS=$(GCC_OPTIONS) $(GL_OPTIONS)
 
 all: finalproj
 
-finalproj: angel/InitShader.o finalproj.o
+finalproj: angel/InitShader.o finalproj.o asset.o
 	g++ $(GCC_OPTIONS) $(GL_OPTIONS) $(ASSIMP) $^ -o final
 
 finalproj.o: finalproj.cpp
 	g++ $(GCC_OPTIONS) -c $^ -o finalproj.o
 
 asset.o: asset.hpp asset.cpp
-	g++ $(GCC) -c $^ -o asset.o
 
 angel/InitShader.o:
 	g++ $(GCC_OPTIONS) -c angel/InitShader.cpp -o angel/InitShader.o
