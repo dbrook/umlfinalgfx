@@ -22,8 +22,28 @@
 
 #endif
 
+#include <string>
+
+using namespace std;
+using namespace Assimp;
+
 class Asset {
+public:
+        // Object constructor
         Asset();
+
+        // Preferred constructor provided you have the model file ready
+        Asset( string fileName );
+
+        // Destructor
+        ~Asset();
+
+        // Open a model file
+        bool openModel( string fileName );
+
+private:
+        Importer import;
+        const aiScene *scene;
 };
 
 #endif

@@ -7,6 +7,7 @@
  */
 
 #include "angel/Angel.h"        // Ed Angel's OpenGL Helper Extensions
+#include "asset.hpp"
 
 #ifdef __APPLE__
 #include <ApplicationServices/ApplicationServices.h>
@@ -59,7 +60,7 @@ viewerModes globalViewMode;
  * to TRUE, the idle function will "move the camera" in their respective
  * direction. On a keyUp event, the flag is set FALSE.
  */
-bool forward = false, backward = false, left = false, right = false;
+bool cam_forward = false, cam_backward = false, cam_left = false, cam_right = false;
 bool lookLeft = false, lookRight = false, lookUp = false, lookDown = false;
 
 /*
@@ -303,16 +304,16 @@ void keyboard( unsigned char key, int x, int y )
                 globalViewMode = ORTHOGRAPHIC;
                 break;
         case 'w':
-                forward = true;
+                cam_forward = true;
                 break;
         case 's':
-                backward = true;
+                cam_backward = true;
                 break;
         case 'a':
-                left = true;
+                cam_left = true;
                 break;
         case 'd':
-                right = true;
+                cam_right = true;
                 break;
 
         case 'i':
@@ -364,16 +365,16 @@ void keyUp( unsigned char key, int x, int y )
 {
         switch (key) {
         case 'w':
-                forward = false;
+                cam_forward = false;
                 break;
         case 's':
-                backward = false;
+                cam_backward = false;
                 break;
         case 'a':
-                left = false;
+                cam_left = false;
                 break;
         case 'd':
-                right = false;
+                cam_right = false;
                 break;
         case 'i':
                 lookUp = false;
@@ -424,16 +425,16 @@ inline GLfloat toRadians( GLfloat degrees ) { return degrees * (M_PI / 180.0); }
  */
 void idle(void)
 {
-        if (forward)
+        if (cam_forward)
                 camVel.z = SPD_FACT;
-        else if (backward)
+        else if (cam_backward)
                 camVel.z = -SPD_FACT;
         else
                 camVel.z = 0.0;
 
-        if (left)
+        if (cam_left)
                 camVel.x = SPD_FACT;
-        else if (right)
+        else if (cam_right)
                 camVel.x = -SPD_FACT;
         else
                 camVel.x = 0.0;
@@ -484,6 +485,12 @@ int main( int argc, char **argv )
         // Make the cursor disappear and then center it to capture motion.
         glutSetCursor(GLUT_CURSOR_NONE);
         glutWarpPointer(255, 255);
+
+
+        ////////////////
+        /////  TESTING CODE. Attempting to spawn Assimp for object
+        /////////////////
+        Asset myscene( "Models/Bobafett/Bobafett.3DS" );
 
         /*
          * Enter the GLUT event loop for input processing
