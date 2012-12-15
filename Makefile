@@ -5,7 +5,7 @@
 ##
 
 GCC=-pedantic
-LINKS=-lGLEW -lglut -lGL -lXmu -lX11 -lm
+LINKS=-lGLEW -lglut -lGL -lXmu -lX11 -lm -lassimp
 
 all: finalproj
 
@@ -14,6 +14,9 @@ finalproj: angel/InitShader.o finalproj.o
 
 finalproj.o: finalproj.cpp
 	g++ $(GCC) -c $^ -o finalproj.o
+	
+asset.o: asset.hpp asset.cpp
+	g++ $(GCC) -c $^ -o asset.o
 
 angel/InitShader.o:
 	g++ $(GCC) -c angel/InitShader.cpp -o angel/InitShader.o $(LINKS)
