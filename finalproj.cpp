@@ -18,11 +18,12 @@ typedef Angel::vec4  color4;
 typedef Angel::vec4  point4;
 
 /*
- * Initialization of space for the objects in the scene to live
+ * Initialization of space for the objects in the scene to live such
+ * that the shaders are able to get at the information
  */
 const int NumVertices = 100;
-vec4 points[NumVertices];         // Each point
-vec4 colors[NumVertices];         // Corresponding colors at points
+vec4 points[NumVertices];      // Each point
+vec4 colors[NumVertices];      // Corresponding colors at points
 int  Index = 0;
 
 /*
@@ -49,16 +50,6 @@ GLuint model_view;  // model-view matrix uniform shader variable location
 GLuint projection;  // projection matrix uniform shader variable location
 typedef enum { PERSPECTIVE, ORTHOGRAPHIC } viewerModes;
 viewerModes globalViewMode;
-
-/*
- * Lighting mode flags
- * (also positioning vectors)
- */
-bool light0On = true;
-bool light1On = true;
-
-vec4 light0Pos = vec4(0.0, 5.0, -0.5, 1.0);
-vec4 light1Pos = vec4(5.0, 0.0, -0.5, 1.0);
 
 /*
  * Displacement flags
@@ -197,7 +188,7 @@ void init()
         glBufferData( GL_ARRAY_BUFFER, sizeof(points) + sizeof(colors), NULL, GL_STATIC_DRAW );
         glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(points), points );
         glBufferSubData( GL_ARRAY_BUFFER, sizeof(points), sizeof(colors), colors );
-        
+
         // Load shaders and use the resulting shader program
         GLuint program = InitShader( "vshaderTest.glsl", "fshaderTest.glsl" );
         glUseProgram( program );
@@ -207,10 +198,6 @@ void init()
         glEnableVertexAttribArray( vPosition );
         glVertexAttribPointer( vPosition, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
 
-        GLuint vNormal = glGetAttribLocation( program, "vNormal" );
-        glEnableVertexAttribArray( vNormal );
-        glVertexAttribPointer( vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0) );
-        
         GLuint vColor = glGetAttribLocation( program, "vColor" ); 
         glEnableVertexAttribArray( vColor );
         glVertexAttribPointer( vColor, 4, GL_FLOAT, GL_FALSE, 0,
@@ -220,22 +207,6 @@ void init()
         projection = glGetUniformLocation( program, "projection" );
         
         glEnable(GL_DEPTH_TEST);
-
-        // Setup the lighting environment
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
-        glEnable(GL_LIGHT1);
-
-        // Shader-ify the lighting parameters
-        GLfloat lp0[] = {light0Pos.x, light0Pos.y, light0Pos.z, light0Pos.w};
-        GLfloat lp1[] = {light1Pos.x, light1Pos.y, light1Pos.z, light1Pos.w};
-        GLfloat lKd0[] = {0.1f, 0.1f, 0.1f, 1.0f};
-        GLfloat lKd1[] = {1.0f, 1.0f, 1.0f, 1.0f};
-
-        glLightfv(GL_LIGHT0, GL_POSITION, lp0);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, lKd0);
-        glLightfv(GL_LIGHT1, GL_POSITION, lp1);
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, lKd1);
 
         // Get a new projection
         // Projection for Homework 2 uses some handy globals so the controlling keys
@@ -357,15 +328,6 @@ void keyboard( unsigned char key, int x, int y )
                 lookRight = true;
                 break;
 
-        case 'n':
-                if (light0On)  light0On = false;
-                else           light0On = true;
-                break;
-        case 'm':
-                if (light1On)  light1On = false;
-                else           light1On = true;
-                break;
-
         case 'r':
                 // Reset field of view!
                 camXYZ.y = camXYZ.x = 0.0;
@@ -390,17 +352,6 @@ void keyboard( unsigned char key, int x, int y )
                 new_projection = Perspective( 45.0, aspect, 0.5, 9.0 );
         else if (globalViewMode == ORTHOGRAPHIC)
                 new_projection = Ortho( -1.5, 1.5, -1.5, 1.5, -10.0, 10.0 );
-
-        // Turn on or off the lighting as dictated by the user above
-        if (light0On)
-                glEnable(GL_LIGHT0);
-        else
-                glDisable(GL_LIGHT0);
-        if (light1On)
-                glEnable(GL_LIGHT1);
-        else
-                glDisable(GL_LIGHT1);
-
 
         // Update drawing
         glutPostRedisplay();

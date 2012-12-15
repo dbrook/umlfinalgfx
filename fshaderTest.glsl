@@ -5,6 +5,6 @@ varying vec4 lightDiff;
 void
 main()
 {
-    gl_FragColor = lightDiff * color;
+    gl_FragColor = color;
     
 }
