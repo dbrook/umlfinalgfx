@@ -70,6 +70,9 @@ vec4 camXYZ;
 vec3 camRot;
 vec4 camVel;
 
+// Object thing
+Asset3ds *scene;
+
 /*
  * Current transformation matrix AND the matrix that will be sent to the
  * shader when an updated projection is requested by the user.
@@ -170,9 +173,24 @@ void makeGround()
  */
 void init()
 {
+/*
+        // A grayish background
+        glClearColor( 1.0, 1.0, 1.0, 1.0 );
+
+        glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHTING);
+        GLfloat pos[] = { 0.0, 4.0, 4.0 };
+        glLightfv(GL_LIGHT0, GL_POSITION, pos);
+
+        // Create the vertex buffer object from the loaded scene / 3DS file
+        scene->CreateVBO();
+
+*/
+
         colorcube();        // Fill up the unit color cube
         makeGround();       // Show the ground somewhere
-        
+
+
         // Create a vertex array object
         GLuint vao;
 #ifdef __APPLE__
@@ -234,6 +252,7 @@ void init()
 
         // A grayish background
         glClearColor( 0.15, 0.15, 0.15, 1.0 );
+
 }
 
 /*
@@ -241,8 +260,24 @@ void init()
  */
 void display( void )
 {
+
+//        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+//
+//        // Reset the viewport
+//        glViewport(0, 0, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
+//        // Reset the projection and modelview matrix
+//        glMatrixMode(GL_PROJECTION);
+//        glLoadIdentity();
+//        // 10 x 10 x 10 viewing volume
+//        glOrtho(-5.0, 5.0, -5.0, 5.0, -5.0, 5.0);
+//        glMatrixMode(GL_MODELVIEW);
+//        glLoadIdentity();
+//
+//
+//        scene->Draw();
+
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-        
+
         // Get a new projection
         // Projection for Homework 2 uses some handy globals so the controlling keys
         // can change matrices.
@@ -270,7 +305,7 @@ void display( void )
         tran = tran * RotateX(camRot.x) * RotateY(camRot.y);
         tran = tran * Translate(camXYZ.x, camXYZ.y, camXYZ.z);
 
-        /* 
+        /*
          * Update the model view matrix with the translation.
          * Then update the projection matrix.
          */
@@ -471,6 +506,10 @@ int main( int argc, char **argv )
 #else
         glewInit();
 #endif
+
+        // Try to load a 3DS model for the scene
+        scene = new Asset3ds("../l3ds_tut/monkey.3ds");
+
         init();
 
         /*
@@ -487,10 +526,6 @@ int main( int argc, char **argv )
         glutWarpPointer(255, 255);
 
 
-        ////////////////
-        /////  TESTING CODE. Attempting to spawn Assimp for object
-        /////////////////
-        Asset myscene( "Models/Bobafett/Bobafett.3DS" );
 
         /*
          * Enter the GLUT event loop for input processing

@@ -2,48 +2,36 @@
  * Filename: asset.hpp
  *
  * This file contains public interfaces to the asset loading code that
- * is implemented with ASSIMP (the Open Asset Import Library).
+ * is going to produce OpenGL scenes from Blender OBJ files.
+ *
+ * Much of this code comes from:
+ * http://www.donkerdump.nl/node/207
  */
 
 #ifndef _ASSET_H
 #define _ASSET_H
 
-#ifdef __APPLE__
-
-#include </usr/local/include/assimp/Importer.hpp>
-#include </usr/local/include/assimp/scene.h>
-#include </usr/local/include/assimp/postprocess.h>
-
-#else
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
-#endif
+#include <lib3ds/file.h>
+#include <lib3ds/mesh.h>
 
 #include <string>
+#include <cstring>
+#include <cassert>
 
-using namespace std;
-using namespace Assimp;
+#include "angel/Angel.h"
 
-class Asset {
+class Asset3ds
+{
 public:
-        // Object constructor
-        Asset();
-
-        // Preferred constructor provided you have the model file ready
-        Asset( string fileName );
-
-        // Destructor
-        ~Asset();
-
-        // Open a model file
-        bool openModel( string fileName );
-
-private:
-        Importer import;
-        const aiScene *scene;
+        Asset3ds(std::string filename);
+        virtual void Draw() const;
+        virtual void CreateVBO();
+        virtual ~Asset3ds();
+protected:
+        void GetFaces();
+        unsigned int m_TotalFaces;
+        Lib3dsFile * m_model;
+        GLuint m_VertexVBO, m_NormalVBO;
 };
 
 #endif

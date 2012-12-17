@@ -9,10 +9,10 @@ GCC=-pedantic
 UNAME := $(shell uname)
 
 ifeq ($(UNAME), Linux)
-LINKS=-lGLEW -lglut -lGL -lXmu -lX11 -lm -lassimp
+LINKS=-lGLEW -lglut -lGL -lXmu -lX11 -lm -l3ds
 endif
 ifeq ($(UNAME), Darwin)
-LINKS=-framework OpenGL -framework GLUT -framework ApplicationServices -lassimp
+LINKS=-framework OpenGL -framework GLUT -framework ApplicationServices
 endif
 
 all: finalproj
